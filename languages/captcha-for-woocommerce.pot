@@ -1,0 +1,208 @@
+# Copyright (C) 2026 developer
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Captcha for WooCommerce 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/captcha-for-woocommerce\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-01-08T00:00:00+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.9.0\n"
+"X-Domain: captcha-for-woocommerce\n"
+
+#. Plugin Name of the plugin
+msgid "Captcha for WooCommerce"
+msgstr ""
+
+#. Description of the plugin
+msgid "Multi-provider bot protection with reCAPTCHA, Turnstile & hCaptcha. Protect checkout, login, registration and more."
+msgstr ""
+
+#: includes/class-cfw-settings.php
+msgid "WordPress Forms"
+msgstr ""
+
+#: includes/class-cfw-settings.php
+msgid "Login Form"
+msgstr ""
+
+#: includes/class-cfw-settings.php
+msgid "Registration Form"
+msgstr ""
+
+#: includes/class-cfw-settings.php
+msgid "Lost Password Form"
+msgstr ""
+
+#: includes/class-cfw-settings.php
+msgid "Comment Form"
+msgstr ""
+
+#: includes/class-cfw-settings.php
+msgid "WooCommerce Forms"
+msgstr ""
+
+#: includes/class-cfw-settings.php
+msgid "My Account Login"
+msgstr ""
+
+#: includes/class-cfw-settings.php
+msgid "My Account Registration"
+msgstr ""
+
+#: includes/class-cfw-settings.php
+msgid "My Account Lost Password"
+msgstr ""
+
+#: includes/class-cfw-settings.php
+msgid "Checkout (Classic)"
+msgstr ""
+
+#: includes/class-cfw-settings.php
+msgid "Checkout (Block)"
+msgstr ""
+
+#: includes/class-cfw-settings.php
+msgid "Pay for Order"
+msgstr ""
+
+#: includes/class-cfw-settings.php
+msgid "WooCommerce Extensions"
+msgstr ""
+
+#: includes/class-cfw-settings.php
+msgid "Product Vendors Registration"
+msgstr ""
+
+#: includes/class-cfw-settings.php
+msgid "Subscriptions Checkout"
+msgstr ""
+
+#: includes/class-cfw-settings.php
+msgid "Memberships Registration"
+msgstr ""
+
+#: includes/admin/class-cfw-settings-page.php
+msgid "CAPTCHA"
+msgstr ""
+
+#: includes/admin/class-cfw-settings-page.php
+msgid "CAPTCHA Provider"
+msgstr ""
+
+#: includes/admin/class-cfw-settings-page.php
+msgid "Provider"
+msgstr ""
+
+#: includes/admin/class-cfw-settings-page.php
+msgid "Select the CAPTCHA service you want to use."
+msgstr ""
+
+#: includes/admin/class-cfw-settings-page.php
+msgid "Site Key"
+msgstr ""
+
+#: includes/admin/class-cfw-settings-page.php
+msgid "Enter the site key from your CAPTCHA provider."
+msgstr ""
+
+#: includes/admin/class-cfw-settings-page.php
+msgid "Secret Key"
+msgstr ""
+
+#: includes/admin/class-cfw-settings-page.php
+msgid "Enter the secret key from your CAPTCHA provider. Keep this private."
+msgstr ""
+
+#: includes/admin/class-cfw-settings-page.php
+msgid "Appearance"
+msgstr ""
+
+#: includes/admin/class-cfw-settings-page.php
+msgid "Theme"
+msgstr ""
+
+#: includes/admin/class-cfw-settings-page.php
+msgid "Auto (match site)"
+msgstr ""
+
+#: includes/admin/class-cfw-settings-page.php
+msgid "Light"
+msgstr ""
+
+#: includes/admin/class-cfw-settings-page.php
+msgid "Dark"
+msgstr ""
+
+#: includes/admin/class-cfw-settings-page.php
+msgid "Size"
+msgstr ""
+
+#: includes/admin/class-cfw-settings-page.php
+msgid "Normal"
+msgstr ""
+
+#: includes/admin/class-cfw-settings-page.php
+msgid "Compact"
+msgstr ""
+
+#: includes/admin/class-cfw-settings-page.php
+msgid "Test Connection"
+msgstr ""
+
+#: includes/admin/class-cfw-settings-page.php
+msgid "Get your API keys"
+msgstr ""
+
+#: includes/providers/class-cfw-turnstile.php
+msgid "Privacy-focused, usually invisible, free unlimited usage. Recommended for most sites."
+msgstr ""
+
+#: includes/providers/class-cfw-recaptcha-v2.php
+msgid "Classic \"I'm not a robot\" checkbox. Most recognized, 1M free requests/month."
+msgstr ""
+
+#: includes/providers/class-cfw-recaptcha-v3.php
+msgid "Score-based, runs invisibly in background. Best for seamless user experience."
+msgstr ""
+
+#: includes/providers/class-cfw-hcaptcha.php
+msgid "Privacy-focused alternative, challenge-based. 1M free requests/month."
+msgstr ""
+
+#: includes/providers/class-cfw-honeypot.php
+msgid "No API keys required. Zero external dependencies, maximum privacy. Perfect for GDPR compliance."
+msgstr ""
+
+#: includes/class-cfw-plugin.php
+#: includes/providers/class-cfw-abstract-provider.php
+msgid "Security verification"
+msgstr ""
+
+#: includes/providers/class-cfw-abstract-provider.php
+msgid "Please complete this security check to continue."
+msgstr ""
+
+#: includes/providers/*.php
+msgid "Please complete the CAPTCHA verification."
+msgstr ""
+
+#: includes/providers/*.php
+msgid "CAPTCHA verification failed. Please try again."
+msgstr ""
+
+#: includes/providers/*.php
+msgid "CAPTCHA expired. Please complete the verification again."
+msgstr ""
+
+#: includes/providers/*.php
+msgid "Server configuration error. Please contact the site administrator."
+msgstr ""
+
+#: includes/class-cfw-assets.php
+msgid "CAPTCHA expired. Please try again."
+msgstr ""

@@ -1,0 +1,93 @@
+/**
+ * Captcha for WooCommerce - Admin Styles
+ *
+ * Follows WooCommerce admin UI patterns.
+ *
+ * @package Captcha_For_WooCommerce
+ * @since   1.0.0
+ */
+
+/* API link styling */
+.cfwc-api-link {
+	margin: 0.5em 0 1em;
+}
+
+.cfwc-api-link a {
+	text-decoration: none;
+}
+
+.cfwc-api-link a:hover {
+	text-decoration: underline;
+}
+
+/* Test connection button */
+.cfwc-test-connection {
+	margin: 1em 0 2em;
+	display: flex;
+	align-items: center;
+	gap: 1em;
+}
+
+.cfwc-test-result {
+	display: inline-block;
+}
+
+.cfwc-test-result.success {
+	color: #46b450;
+}
+
+.cfwc-test-result.error {
+	color: #dc3232;
+}
+
+.cfwc-test-result.loading {
+	color: #666;
+}
+
+/* Settings section styling */
+.woocommerce table.form-table th {
+	padding-left: 0;
+}
+
+/* Checkbox groups with better spacing */
+.woocommerce table.form-table .forminp-checkbox {
+	padding-top: 0;
+}
+
+/* Provider select enhancement */
+#cfw_provider {
+	min-width: 300px;
+}
+
+/* Key input fields */
+#cfw_site_key,
+#cfw_secret_key {
+	min-width: 400px;
+}
+
+/* Textarea styling */
+#cfw_whitelist_ips {
+	font-family: monospace;
+	font-size: 13px;
+}
+
+/* Notice styling in settings */
+.woocommerce-settings-cfw_captcha .notice {
+	margin: 15px 0;
+}
+
+/* Form checkbox groups */
+.forminp .checkbox-label {
+	display: inline-block;
+	margin-right: 15px;
+}
+
+/* Score threshold input */
+#cfw_score_threshold {
+	width: 80px;
+}
+
+/* Min time input */
+#cfw_honeypot_min_time {
+	width: 60px;
+}

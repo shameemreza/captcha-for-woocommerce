@@ -1,0 +1,113 @@
+/**
+ * Captcha for WooCommerce - Frontend Styles
+ *
+ * Minimal styles that follow WooCommerce design patterns.
+ * Total size target: < 2KB minified + gzipped.
+ *
+ * @package Captcha_For_WooCommerce
+ * @since   1.0.0
+ */
+
+/* CAPTCHA field container */
+.cfwc-captcha-field {
+	margin: 1em 0;
+	clear: both;
+}
+
+/* WooCommerce checkout specific positioning */
+.woocommerce-checkout .cfwc-captcha-field {
+	margin: 1.5em 0;
+}
+
+/* My Account page styling */
+.woocommerce-account .cfwc-captcha-field {
+	margin: 1em 0;
+}
+
+/* WordPress login page */
+.login .cfwc-captcha-field {
+	margin: 16px 0 24px;
+}
+
+/* WordPress comment form */
+.comment-form .cfwc-captcha-field {
+	margin: 1em 0;
+}
+
+/* Honeypot hidden field - invisible to users but accessible to bots */
+.cfwc-hp-container {
+	position: absolute !important;
+	top: -9999px !important;
+	left: -9999px !important;
+	opacity: 0 !important;
+	visibility: hidden !important;
+	pointer-events: none !important;
+	height: 0 !important;
+	width: 0 !important;
+	overflow: hidden !important;
+}
+
+/* Error message styling */
+.cfwc-error {
+	color: #a00;
+	font-size: 0.875em;
+	margin-top: 0.5em;
+}
+
+.woocommerce .cfwc-error {
+	color: var(--wc-red, #a00);
+}
+
+/* Widget wrapper for proper alignment */
+.cfwc-captcha-field .cf-turnstile,
+.cfwc-captcha-field .g-recaptcha,
+.cfwc-captcha-field .h-captcha {
+	margin: 0.5em 0;
+}
+
+/* Ensure widget doesn't break layout */
+.cfwc-captcha-field iframe {
+	max-width: 100%;
+}
+
+/* Product Vendors registration form */
+.cfwc-wcpv-captcha {
+	margin: 1em 0;
+	padding: 0.5em 0;
+}
+
+/* Screen reader text - accessible but hidden */
+.cfwc-captcha-field .screen-reader-text {
+	border: 0;
+	clip: rect(1px, 1px, 1px, 1px);
+	clip-path: inset(50%);
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	padding: 0;
+	position: absolute;
+	width: 1px;
+	word-wrap: normal !important;
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+	.cfwc-error {
+		color: #ff6b6b;
+	}
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+	.cfwc-captcha-field * {
+		animation: none !important;
+		transition: none !important;
+	}
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+	.cfwc-error {
+		font-weight: bold;
+	}
+}
