@@ -3,7 +3,7 @@
  * Uninstall handler for Captcha for WooCommerce.
  *
  * Runs when the plugin is deleted from WordPress.
- * Cleans up all plugin data from the database.
+ * Only cleans up data if the "Delete Data on Uninstall" option is enabled.
  *
  * @package Captcha_For_WooCommerce
  * @since   1.0.0
@@ -15,16 +15,29 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 }
 
 /**
+ * Check if we should delete data.
+ *
+ * Only proceed if the admin has enabled the "Delete Data on Uninstall" option.
+ * This respects user choice and prevents accidental data loss.
+ */
+$cfwc_delete_data = get_option( 'cfwc_delete_data_on_uninstall', 'no' );
+
+// Exit early if data deletion is not enabled.
+if ( 'yes' !== $cfwc_delete_data ) {
+	return;
+}
+
+/**
  * Clean up plugin data on uninstall.
  *
- * Removes all options and transients created by the plugin.
+ * Removes all options, transients, and statistics created by the plugin.
  */
 
 // Delete main settings option.
 delete_option( 'cfwc_settings' );
 
 // Delete individual WooCommerce settings options.
-$cfwc_options = array(
+$cfwc_wc_options = array(
 	'cfwc_provider',
 	'cfwc_site_key',
 	'cfwc_secret_key',
@@ -35,18 +48,34 @@ $cfwc_options = array(
 	'cfwc_whitelist_logged_in',
 	'cfwc_whitelist_roles',
 	'cfwc_whitelist_ips',
+	'cfwc_blocklist_ips',
 	'cfwc_enable_honeypot',
 	'cfwc_honeypot_min_time',
 	'cfwc_failsafe_mode',
 	'cfwc_enable_debug_logging',
+	'cfwc_delete_data_on_uninstall',
+	'cfwc_enable_rate_limiting',
+	'cfwc_rate_limit_requests',
+	'cfwc_rate_limit_lockout',
+	'cfwc_rate_limit_window',
 );
 
-foreach ( $cfwc_options as $cfwc_option ) {
+foreach ( $cfwc_wc_options as $cfwc_option ) {
 	delete_option( $cfwc_option );
 }
 
-// Delete version option.
+// Delete version and status options.
 delete_option( 'cfwc_version' );
+delete_option( 'cfwc_welcome_notice_dismissed' );
+delete_option( 'cfwc_config_notice_dismissed' );
+
+// Delete rate limiter data.
+delete_option( 'cfwc_failed_attempts' );
+delete_option( 'cfwc_lockouts' );
+delete_option( 'cfwc_attempt_timestamps' );
+
+// Delete statistics.
+delete_option( 'cfwc_protection_stats' );
 
 // Delete transients.
 delete_transient( 'cfwc_connection_test' );
@@ -67,12 +96,19 @@ if ( is_multisite() ) {
 		// Delete options for this site.
 		delete_option( 'cfwc_settings' );
 		delete_option( 'cfwc_version' );
+		delete_option( 'cfwc_welcome_notice_dismissed' );
+		delete_option( 'cfwc_config_notice_dismissed' );
+		delete_option( 'cfwc_failed_attempts' );
+		delete_option( 'cfwc_lockouts' );
+		delete_option( 'cfwc_attempt_timestamps' );
+		delete_option( 'cfwc_protection_stats' );
 
-		foreach ( $cfwc_options as $cfwc_option ) {
+		foreach ( $cfwc_wc_options as $cfwc_option ) {
 			delete_option( $cfwc_option );
 		}
 
 		delete_transient( 'cfwc_connection_test' );
+		wp_clear_scheduled_hook( 'cfwc_cleanup' );
 
 		restore_current_blog();
 	}

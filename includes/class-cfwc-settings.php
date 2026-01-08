@@ -54,12 +54,16 @@ class Settings {
 		'whitelist_logged_in'   => 'no',
 		'whitelist_roles'       => array(),
 		'whitelist_ips'         => '',
+		'blocklist_ips'         => '',
 		'enable_honeypot'       => 'no',
 		'honeypot_min_time'     => 3,
 		'enable_rate_limiting'  => 'no',
-		'rate_limit_requests'   => 30,
-		'enable_debug_logging'  => 'no',
-		'failsafe_mode'         => 'honeypot',
+		'rate_limit_requests'   => 5,
+		'rate_limit_lockout'    => 15,
+		'rate_limit_window'     => 60,
+		'enable_debug_logging'       => 'no',
+		'failsafe_mode'              => 'honeypot',
+		'delete_data_on_uninstall'   => 'no',
 	);
 
 	/**

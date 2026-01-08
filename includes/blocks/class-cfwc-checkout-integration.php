@@ -2,8 +2,8 @@
 /**
  * Block Checkout Integration.
  *
- * Integrates CAPTCHA with WooCommerce Block Checkout using the
- * official Blocks API.
+ * Integrates CAPTCHA with WooCommerce Block Checkout using vanilla JavaScript.
+ * This approach is simpler and doesn't require wp-scripts compilation.
  *
  * @package Captcha_For_WooCommerce
  * @since   1.0.0
@@ -16,179 +16,68 @@ use CFWC\Plugin;
 // Prevent direct file access.
 defined( 'ABSPATH' ) || exit;
 
-// Bail early if the interface doesn't exist (WooCommerce Blocks not loaded).
-if ( ! interface_exists( 'Automattic\WooCommerce\Blocks\Integrations\IntegrationInterface' ) ) {
-	return;
-}
-
 /**
  * Checkout_Integration class.
  *
- * Implements the WooCommerce Blocks IntegrationInterface to properly
- * integrate CAPTCHA with the React-based Block Checkout.
+ * Handles Block Checkout CAPTCHA widget rendering and validation.
+ * Uses vanilla JavaScript with wp.data for Store API communication.
  *
  * @since 1.0.0
  */
-class Checkout_Integration implements \Automattic\WooCommerce\Blocks\Integrations\IntegrationInterface {
+class Checkout_Integration {
 
 	/**
-	 * Integration name.
+	 * Integration namespace for Store API.
 	 *
 	 * @var string
 	 */
-	const INTEGRATION_NAME = 'captcha-for-woocommerce';
+	const NAMESPACE = 'captcha-for-woocommerce';
 
 	/**
-	 * Get the name of the integration.
+	 * Constructor.
 	 *
 	 * @since 1.0.0
-	 * @return string Integration name.
 	 */
-	public function get_name() {
-		return self::INTEGRATION_NAME;
-	}
-
-	/**
-	 * Initialize the integration.
-	 *
-	 * Called when WooCommerce Blocks loads the integration.
-	 *
-	 * @since 1.0.0
-	 * @return void
-	 */
-	public function initialize() {
-		$this->register_block_scripts();
-		$this->register_block_editor_scripts();
-	}
-
-	/**
-	 * Get the script handles for the frontend.
-	 *
-	 * @since 1.0.0
-	 * @return array Script handles.
-	 */
-	public function get_script_handles() {
-		return array( 'cfwc-checkout-block-frontend' );
-	}
-
-	/**
-	 * Get the script handles for the editor.
-	 *
-	 * @since 1.0.0
-	 * @return array Script handles.
-	 */
-	public function get_editor_script_handles() {
-		return array( 'cfwc-checkout-block-editor' );
-	}
-
-	/**
-	 * Get script data for the frontend.
-	 *
-	 * This data is passed to the JavaScript via wp_localize_script.
-	 *
-	 * @since 1.0.0
-	 * @return array Script data.
-	 */
-	public function get_script_data() {
-		$settings = Plugin::instance()->settings();
-
-		return array(
-			'enabled'        => $settings->is_form_enabled( 'wc_checkout_block' ),
-			'provider'       => $settings->get( 'provider' ),
-			'siteKey'        => $settings->get( 'site_key' ),
-			'theme'          => $settings->get( 'theme' ),
-			'size'           => $settings->get( 'size' ),
-			'scoreThreshold' => $settings->get( 'score_threshold', 0.5 ),
-			'namespace'      => self::INTEGRATION_NAME,
-			'i18n'           => array(
-				'error'   => __( 'Please complete the CAPTCHA verification.', 'captcha-for-woocommerce' ),
-				'expired' => __( 'CAPTCHA expired. Please try again.', 'captcha-for-woocommerce' ),
-				'failed'  => __( 'CAPTCHA verification failed. Please try again.', 'captcha-for-woocommerce' ),
-			),
-		);
-	}
-
-	/**
-	 * Register frontend scripts for Block Checkout.
-	 *
-	 * @since 1.0.0
-	 * @return void
-	 */
-	private function register_block_scripts() {
-		$asset_file = CFWC_PLUGIN_DIR . 'build/checkout-block/index.asset.php';
-
-		if ( file_exists( $asset_file ) ) {
-			$asset = require $asset_file;
-		} else {
-			$asset = array(
-				'dependencies' => array(
-					'wp-element',
-					'wp-data',
-					'wp-plugins',
-					'wc-blocks-checkout',
-				),
-				'version'      => CFWC_VERSION,
-			);
+	public function __construct() {
+		// Only load if Block Checkout is enabled.
+		if ( ! Plugin::instance()->settings()->is_form_enabled( 'wc_checkout_block' ) ) {
+			return;
 		}
 
-		wp_register_script(
-			'cfwc-checkout-block-frontend',
-			CFWC_PLUGIN_URL . 'build/checkout-block/index.js',
-			$asset['dependencies'],
-			$asset['version'],
-			true
-		);
+		// Render widget container in Block Checkout.
+		add_action( 'woocommerce_blocks_checkout_block_registration', array( $this, 'register_integration' ) );
+		add_action( 'woocommerce_blocks_enqueue_checkout_block_scripts_after', array( $this, 'enqueue_scripts' ) );
 
-		// Register provider scripts that might be needed.
-		$this->register_provider_scripts();
-
-		// Add script data using the proper WordPress method.
-		wp_add_inline_script(
-			'cfwc-checkout-block-frontend',
-			'var cfwcBlockCheckout = ' . wp_json_encode( $this->get_script_data() ) . ';',
-			'before'
-		);
+		// Add widget container to checkout block.
+		add_filter( 'render_block_woocommerce/checkout', array( $this, 'render_captcha_container' ), 10, 2 );
 	}
 
 	/**
-	 * Register editor scripts for Block Checkout.
+	 * Register with WooCommerce Blocks if available.
+	 *
+	 * Uses vanilla JavaScript approach with wp.data for Store API integration.
+	 * IntegrationInterface is not required for basic functionality.
+	 *
+	 * @since 1.0.0
+	 * @param object $integration_registry Integration registry.
+	 * @return void
+	 */
+	public function register_integration( $integration_registry ) {
+		// Our implementation uses vanilla JS with wp.data.
+		// No IntegrationInterface registration needed.
+	}
+
+	/**
+	 * Enqueue scripts for Block Checkout.
 	 *
 	 * @since 1.0.0
 	 * @return void
 	 */
-	private function register_block_editor_scripts() {
-		$asset_file = CFWC_PLUGIN_DIR . 'build/checkout-block/editor.asset.php';
-
-		if ( file_exists( $asset_file ) ) {
-			$asset = require $asset_file;
-		} else {
-			$asset = array(
-				'dependencies' => array( 'wp-element' ),
-				'version'      => CFWC_VERSION,
-			);
-		}
-
-		wp_register_script(
-			'cfwc-checkout-block-editor',
-			CFWC_PLUGIN_URL . 'build/checkout-block/editor.js',
-			$asset['dependencies'],
-			$asset['version'],
-			true
-		);
-	}
-
-	/**
-	 * Register provider scripts for Block Checkout.
-	 *
-	 * @since 1.0.0
-	 * @return void
-	 */
-	private function register_provider_scripts() {
+	public function enqueue_scripts() {
 		$settings = Plugin::instance()->settings();
 		$provider = $settings->get( 'provider' );
 
-		// Provider scripts are registered globally in Assets class.
-		// Enqueue the appropriate one for Block Checkout.
+		// Enqueue the provider script.
 		switch ( $provider ) {
 			case 'turnstile':
 				wp_enqueue_script( 'cfwc-turnstile' );
@@ -201,5 +90,70 @@ class Checkout_Integration implements \Automattic\WooCommerce\Blocks\Integration
 				wp_enqueue_script( 'cfwc-hcaptcha' );
 				break;
 		}
+
+		// Ensure wp-data is loaded (required for wp.data.dispatch).
+		// Block Checkout uses wp.data to communicate with the Store API.
+		wp_enqueue_script( 'wp-data' );
+
+		// Enqueue frontend script.
+		wp_enqueue_script( 'cfwc-frontend' );
+
+		// Pass settings to frontend.
+		wp_localize_script(
+			'cfwc-frontend',
+			'cfwSettings',
+			array(
+				'provider'        => $provider,
+				'siteKey'         => $settings->get( 'site_key' ),
+				'theme'           => $settings->get( 'theme' ),
+				'size'            => $settings->get( 'size' ),
+				'namespace'       => self::NAMESPACE,
+				'isBlockCheckout' => true,
+				'i18n'            => array(
+					'error'   => __( 'Please complete the CAPTCHA verification.', 'captcha-for-woocommerce' ),
+					'expired' => __( 'CAPTCHA expired. Please try again.', 'captcha-for-woocommerce' ),
+					'failed'  => __( 'CAPTCHA verification failed. Please try again.', 'captcha-for-woocommerce' ),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Render CAPTCHA container in Block Checkout.
+	 *
+	 * Injects the widget container before the place order button.
+	 *
+	 * @since 1.0.0
+	 * @param string $content Block content.
+	 * @param array  $block   Block data.
+	 * @return string Modified content.
+	 */
+	public function render_captcha_container( $content, $block ) {
+		$settings = Plugin::instance()->settings();
+
+		// Skip if honeypot (handled server-side only).
+		if ( 'honeypot' === $settings->get( 'provider' ) ) {
+			return $content;
+		}
+
+		// Build the captcha container.
+		$captcha_html = sprintf(
+			'<div id="cfwc-block-checkout-captcha" class="cfwc-captcha-field cfwc-block-checkout" data-provider="%s" data-sitekey="%s" data-theme="%s"></div>',
+			esc_attr( $settings->get( 'provider' ) ),
+			esc_attr( $settings->get( 'site_key' ) ),
+			esc_attr( $settings->get( 'theme' ) )
+		);
+
+		// Inject before the place order button.
+		// Look for the checkout actions block.
+		$pattern = '/(<div[^>]*class="[^"]*wc-block-checkout__actions[^"]*"[^>]*>)/i';
+		if ( preg_match( $pattern, $content ) ) {
+			$content = preg_replace( $pattern, $captcha_html . '$1', $content );
+		} else {
+			// Fallback: append to the end.
+			$content .= $captcha_html;
+		}
+
+		return $content;
 	}
 }

@@ -91,3 +91,111 @@
 #cfw_honeypot_min_time {
 	width: 60px;
 }
+
+/* Privacy info section */
+.cfwc-privacy-info {
+	background: #f8f9fa;
+	padding: 12px 16px;
+	border-radius: 4px;
+	margin-top: 8px;
+}
+
+.cfwc-privacy-info p {
+	margin: 0 0 8px;
+}
+
+.cfwc-privacy-info p:last-child {
+	margin-bottom: 0;
+}
+
+.cfwc-privacy-note {
+	margin-top: 12px;
+	color: #666;
+	font-size: 12px;
+}
+
+/* Dashboard widget styles */
+.cfwc-badge {
+	background: #7c3aed;
+	color: #fff;
+	font-size: 10px;
+	padding: 2px 6px;
+	border-radius: 3px;
+	font-weight: 600;
+	vertical-align: middle;
+}
+
+.cfwc-widget-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 12px;
+	margin-bottom: 16px;
+}
+
+.cfwc-stat-box {
+	background: #f6f7f7;
+	padding: 12px;
+	border-radius: 4px;
+	text-align: center;
+}
+
+.cfwc-stat-number {
+	font-size: 24px;
+	font-weight: 600;
+	color: #1e1e1e;
+	line-height: 1.2;
+}
+
+.cfwc-stat-label {
+	font-size: 11px;
+	color: #757575;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.cfwc-stat-box.warning .cfwc-stat-number {
+	color: #d63638;
+}
+
+.cfwc-stat-box.success .cfwc-stat-number {
+	color: #00a32a;
+}
+
+.cfwc-status-row {
+	display: flex;
+	justify-content: space-between;
+	padding: 8px 0;
+	border-bottom: 1px solid #f0f0f0;
+	font-size: 13px;
+}
+
+.cfwc-status-row:last-child {
+	border-bottom: none;
+}
+
+.cfwc-status-label {
+	color: #757575;
+}
+
+.cfwc-status-value {
+	font-weight: 500;
+}
+
+.cfwc-status-value.active {
+	color: #00a32a;
+}
+
+.cfwc-status-value.inactive {
+	color: #d63638;
+}
+
+.cfwc-widget-footer {
+	margin-top: 12px;
+	padding-top: 12px;
+	border-top: 1px solid #f0f0f0;
+	text-align: center;
+}
+
+.cfwc-widget-footer a {
+	text-decoration: none;
+}

@@ -48,9 +48,6 @@ class Settings_Page {
 		// Save settings.
 		add_action( 'woocommerce_update_options_' . self::TAB_ID, array( $this, 'save_settings' ) );
 
-		// Admin notices.
-		add_action( 'admin_notices', array( $this, 'display_notices' ) );
-
 		// AJAX handlers.
 		add_action( 'wp_ajax_cfwc_test_connection', array( $this, 'ajax_test_connection' ) );
 	}
@@ -337,8 +334,18 @@ class Settings_Page {
 
 			array(
 				'title'    => __( 'Whitelisted IPs', 'captcha-for-woocommerce' ),
-				'desc'     => __( 'Enter IP addresses to skip CAPTCHA (one per line).', 'captcha-for-woocommerce' ),
+				'desc'     => __( 'Enter IP addresses to skip CAPTCHA (one per line). Supports CIDR notation (e.g., 192.168.1.0/24) and wildcards (e.g., 192.168.1.*).', 'captcha-for-woocommerce' ),
 				'id'       => 'cfwc_whitelist_ips',
+				'type'     => 'textarea',
+				'default'  => '',
+				'desc_tip' => true,
+				'css'      => 'height: 100px;',
+			),
+
+			array(
+				'title'    => __( 'Blocklisted IPs', 'captcha-for-woocommerce' ),
+				'desc'     => __( 'Enter IP addresses to block entirely (one per line). These IPs cannot submit any protected forms. Supports CIDR notation and wildcards.', 'captcha-for-woocommerce' ),
+				'id'       => 'cfwc_blocklist_ips',
 				'type'     => 'textarea',
 				'default'  => '',
 				'desc_tip' => true,
@@ -348,6 +355,66 @@ class Settings_Page {
 			array(
 				'type' => 'sectionend',
 				'id'   => 'cfwc_access_section',
+			),
+
+			// Section: Rate Limiting.
+			array(
+				'title' => __( 'Rate Limiting', 'captcha-for-woocommerce' ),
+				'type'  => 'title',
+				'desc'  => __( 'Limit failed CAPTCHA attempts to prevent bruteforce attacks.', 'captcha-for-woocommerce' ),
+				'id'    => 'cfwc_rate_limit_section',
+			),
+
+			array(
+				'title'   => __( 'Enable Rate Limiting', 'captcha-for-woocommerce' ),
+				'desc'    => __( 'Lock out IPs after too many failed CAPTCHA attempts', 'captcha-for-woocommerce' ),
+				'id'      => 'cfwc_enable_rate_limiting',
+				'type'    => 'checkbox',
+				'default' => 'no',
+			),
+
+			array(
+				'title'             => __( 'Max Failed Attempts', 'captcha-for-woocommerce' ),
+				'desc'              => __( 'Number of failed attempts before lockout.', 'captcha-for-woocommerce' ),
+				'id'                => 'cfwc_rate_limit_requests',
+				'type'              => 'number',
+				'default'           => '5',
+				'desc_tip'          => true,
+				'custom_attributes' => array(
+					'min' => '3',
+					'max' => '50',
+				),
+			),
+
+			array(
+				'title'             => __( 'Lockout Duration', 'captcha-for-woocommerce' ),
+				'desc'              => __( 'Minutes to lock out IP after reaching limit.', 'captcha-for-woocommerce' ),
+				'id'                => 'cfwc_rate_limit_lockout',
+				'type'              => 'number',
+				'default'           => '15',
+				'desc_tip'          => true,
+				'custom_attributes' => array(
+					'min' => '5',
+					'max' => '1440',
+				),
+			),
+
+			array(
+				'title'             => __( 'Time Window', 'captcha-for-woocommerce' ),
+				'desc'              => __( 'Minutes to track failed attempts (resets after this period).', 'captcha-for-woocommerce' ),
+				'id'                => 'cfwc_rate_limit_window',
+				'type'              => 'number',
+				'default'           => '60',
+				'desc_tip'          => true,
+				'custom_attributes' => array(
+					'min' => '5',
+					'max' => '1440',
+				),
+			),
+
+			array(
+				'type' => 'sectionend',
+				'id'   => 'cfwc_rate_limit_section',
 			),
 
 			// Section: Advanced.
@@ -402,8 +469,29 @@ class Settings_Page {
 			),
 
 			array(
+				'title'   => __( 'Delete Data on Uninstall', 'captcha-for-woocommerce' ),
+				'desc'    => __( 'Remove all plugin data when uninstalling (settings, statistics, etc.)', 'captcha-for-woocommerce' ),
+				'id'      => 'cfwc_delete_data_on_uninstall',
+				'type'    => 'checkbox',
+				'default' => 'no',
+			),
+
+			array(
 				'type' => 'sectionend',
 				'id'   => 'cfwc_advanced_section',
+			),
+
+			// Section: Privacy.
+			array(
+				'title' => __( 'Privacy & Compliance', 'captcha-for-woocommerce' ),
+				'type'  => 'title',
+				'desc'  => $this->get_privacy_description(),
+				'id'    => 'cfwc_privacy_section',
+			),
+
+			array(
+				'type' => 'sectionend',
+				'id'   => 'cfwc_privacy_section',
 			),
 		);
 
@@ -485,6 +573,74 @@ class Settings_Page {
 		}
 
 		return $options;
+	}
+
+	/**
+	 * Get privacy section description.
+	 *
+	 * Displays information about data handling based on selected provider.
+	 *
+	 * @since 1.0.0
+	 * @return string Privacy description HTML.
+	 */
+	private function get_privacy_description() {
+		$settings = Plugin::instance()->settings();
+		$provider = $settings->get( 'provider' );
+
+		$privacy_info = array(
+			'recaptcha_v2' => array(
+				'name'    => 'Google reCAPTCHA',
+				'company' => 'Google LLC',
+				'policy'  => 'https://policies.google.com/privacy',
+				'note'    => __( 'Visitor IP address and browser data is sent to Google servers for verification.', 'captcha-for-woocommerce' ),
+			),
+			'recaptcha_v3' => array(
+				'name'    => 'Google reCAPTCHA',
+				'company' => 'Google LLC',
+				'policy'  => 'https://policies.google.com/privacy',
+				'note'    => __( 'Visitor IP address and browser data is sent to Google servers for verification.', 'captcha-for-woocommerce' ),
+			),
+			'turnstile'    => array(
+				'name'    => 'Cloudflare Turnstile',
+				'company' => 'Cloudflare, Inc.',
+				'policy'  => 'https://www.cloudflare.com/privacypolicy/',
+				'note'    => __( 'Cloudflare processes minimal data. More privacy-focused than reCAPTCHA.', 'captcha-for-woocommerce' ),
+			),
+			'hcaptcha'     => array(
+				'name'    => 'hCaptcha',
+				'company' => 'Intuition Machines, Inc.',
+				'policy'  => 'https://www.hcaptcha.com/privacy',
+				'note'    => __( 'Privacy-focused alternative. Does not sell personal data.', 'captcha-for-woocommerce' ),
+			),
+			'honeypot'     => array(
+				'name'    => 'Self-Hosted Honeypot',
+				'company' => __( 'Your server', 'captcha-for-woocommerce' ),
+				'policy'  => '',
+				'note'    => __( 'No external data sharing. All processing happens on your server. Best for GDPR compliance.', 'captcha-for-woocommerce' ),
+			),
+		);
+
+		$html = '<div class="cfwc-privacy-info">';
+
+		if ( ! empty( $provider ) && isset( $privacy_info[ $provider ] ) ) {
+			$info = $privacy_info[ $provider ];
+			$html .= '<p><strong>' . esc_html__( 'Current Provider:', 'captcha-for-woocommerce' ) . '</strong> ' . esc_html( $info['name'] ) . '</p>';
+			$html .= '<p>' . esc_html( $info['note'] ) . '</p>';
+			if ( ! empty( $info['policy'] ) ) {
+				$html .= '<p><a href="' . esc_url( $info['policy'] ) . '" target="_blank" rel="noopener">' . esc_html__( 'View Privacy Policy', 'captcha-for-woocommerce' ) . ' →</a></p>';
+			}
+		} else {
+			$html .= '<p>' . esc_html__( 'Select a CAPTCHA provider above and save settings to see privacy information here. For maximum privacy, use the Self-Hosted Honeypot option which sends no data to external services.', 'captcha-for-woocommerce' ) . '</p>';
+		}
+
+		$html .= '</div>';
+
+		// Add GDPR note.
+		$html .= '<p class="cfwc-privacy-note">';
+		$html .= esc_html__( 'Note: If your site serves EU visitors, you may need to update your Privacy Policy to disclose the use of CAPTCHA services. The Self-Hosted Honeypot option is GDPR-friendly as it processes no personal data externally.', 'captcha-for-woocommerce' );
+		$html .= '</p>';
+
+		return $html;
 	}
 
 	/**
@@ -584,34 +740,6 @@ class Settings_Page {
 		}
 
 		return $enabled;
-	}
-
-	/**
-	 * Display admin notices.
-	 *
-	 * @since 1.0.0
-	 * @return void
-	 */
-	public function display_notices() {
-		// Only show on our settings page.
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( ! isset( $_GET['tab'] ) || self::TAB_ID !== $_GET['tab'] ) {
-			return;
-		}
-
-		$settings = Plugin::instance()->settings();
-
-		// Warning if no provider configured.
-		if ( ! $settings->is_provider_configured() ) {
-			?>
-			<div class="notice notice-warning">
-				<p>
-					<strong><?php esc_html_e( 'Captcha for WooCommerce:', 'captcha-for-woocommerce' ); ?></strong>
-					<?php esc_html_e( 'Please select a CAPTCHA provider and enter your API keys to enable protection.', 'captcha-for-woocommerce' ); ?>
-				</p>
-			</div>
-			<?php
-		}
 	}
 
 	/**

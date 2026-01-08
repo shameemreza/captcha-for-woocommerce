@@ -130,6 +130,7 @@ final class Plugin {
 		if ( is_admin() ) {
 			new Admin\Settings_Page();
 			new Admin\Admin_Notices();
+			new Admin\Dashboard_Widget();
 		}
 
 		// Defer form initialization to 'init' hook to avoid recursion.
@@ -372,6 +373,27 @@ final class Plugin {
 			return true;
 		}
 
+		// Check IP blocklist.
+		$ip_validator = Protection\IP_Validator::instance();
+		$blocked      = $ip_validator->is_blocked();
+		if ( $blocked ) {
+			return new \WP_Error( 'cfwc_ip_blocked', $blocked );
+		}
+
+		// Check rate limit lockout.
+		$rate_limiter = Protection\Rate_Limiter::instance();
+		if ( $rate_limiter->is_locked_out() ) {
+			return new \WP_Error(
+				'cfwc_rate_limited',
+				$rate_limiter->get_lockout_message()
+			);
+		}
+
+		// Check if CAPTCHA should be skipped for this IP/user.
+		if ( $ip_validator->should_skip_captcha() ) {
+			return true;
+		}
+
 		// Check if user should be skipped.
 		if ( $this->should_skip_for_user() ) {
 			return true;
@@ -417,6 +439,9 @@ final class Plugin {
 
 		// Fire appropriate action based on result.
 		if ( is_wp_error( $result ) ) {
+			// Record failure for rate limiting.
+			$rate_limiter->record_failure();
+
 			/**
 			 * Fires when CAPTCHA verification fails.
 			 *
@@ -426,6 +451,9 @@ final class Plugin {
 			 */
 			do_action( 'cfwc_failed', $form_type, $result );
 		} else {
+			// Record success (clears failed attempts).
+			$rate_limiter->record_success();
+
 			/**
 			 * Fires when CAPTCHA verification succeeds.
 			 *

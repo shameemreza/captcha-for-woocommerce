@@ -26,7 +26,7 @@
 			var self = this;
 
 			// Provider change handler.
-			$( '#cfw_provider' ).on( 'change', function() {
+			$( '#cfwc_provider' ).on( 'change', function() {
 				self.handleProviderChange();
 			} );
 
@@ -44,10 +44,10 @@
 		 * Handle provider selection change.
 		 */
 		handleProviderChange: function() {
-			var provider = $( '#cfw_provider' ).val();
-			var $siteKeyRow = $( '#cfw_site_key' ).closest( 'tr' );
-			var $secretKeyRow = $( '#cfw_secret_key' ).closest( 'tr' );
-			var $scoreRow = $( '#cfw_score_threshold' ).closest( 'tr' );
+			var provider = $( '#cfwc_provider' ).val();
+			var $siteKeyRow = $( '#cfwc_site_key' ).closest( 'tr' );
+			var $secretKeyRow = $( '#cfwc_secret_key' ).closest( 'tr' );
+			var $scoreRow = $( '#cfwc_score_threshold' ).closest( 'tr' );
 
 			// Honeypot doesn't need API keys.
 			if ( provider === 'honeypot' ) {
@@ -95,8 +95,8 @@
 		 * Toggle score threshold visibility.
 		 */
 		toggleScoreThreshold: function() {
-			var provider = $( '#cfw_provider' ).val();
-			var $scoreRow = $( '#cfw_score_threshold' ).closest( 'tr' );
+			var provider = $( '#cfwc_provider' ).val();
+			var $scoreRow = $( '#cfwc_score_threshold' ).closest( 'tr' );
 
 			if ( provider === 'recaptcha_v3' ) {
 				$scoreRow.show();
@@ -112,9 +112,9 @@
 			var self = this;
 			var $button = $( '#cfwc-test-connection' );
 			var $result = $( '.cfwc-test-result' );
-			var provider = $( '#cfw_provider' ).val();
-			var siteKey = $( '#cfw_site_key' ).val();
-			var secretKey = $( '#cfw_secret_key' ).val();
+			var provider = $( '#cfwc_provider' ).val();
+			var siteKey = $( '#cfwc_site_key' ).val();
+			var secretKey = $( '#cfwc_secret_key' ).val();
 
 			if ( ! provider ) {
 				$result.removeClass( 'success loading' )
@@ -134,7 +134,7 @@
 				url: cfwAdmin.ajaxUrl,
 				type: 'POST',
 				data: {
-					action: 'cfw_test_connection',
+					action: 'cfwc_test_connection',
 					nonce: cfwAdmin.nonce,
 					provider: provider,
 					site_key: siteKey,

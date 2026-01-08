@@ -63,7 +63,7 @@ class Checkout_Classic {
 		// Check if we should skip for this payment method.
 		if ( $this->should_skip_for_payment_method() ) {
 			// Output hidden marker for JS to detect.
-			echo '<div class="cfwc-checkout-skip" data-skip="1" style="display:none;"></div>';
+			echo '<div class="cfwc-checkout-skip cfwc-hidden" data-skip="1"></div>';
 			return;
 		}
 

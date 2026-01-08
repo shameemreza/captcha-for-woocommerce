@@ -34,8 +34,49 @@
 	margin: 1em 0;
 }
 
-/* Honeypot hidden field - invisible to users but accessible to bots */
-.cfwc-hp-container {
+/* Honeypot hidden fields - invisible to users but accessible to bots */
+/* Using multiple techniques for maximum stealth */
+
+/* Main honeypot container */
+.cfwc-hp-injected {
+	position: absolute !important;
+	overflow: hidden !important;
+}
+
+/* Visible trap field - positioned off-screen */
+.cfwc-hp-trap {
+	position: absolute !important;
+	overflow: hidden !important;
+	display: inline !important;
+	height: 1px !important;
+	width: 1px !important;
+	z-index: -1000 !important;
+	left: -9999px !important;
+}
+
+/* Hidden JS-only field */
+.cfwc-hp-hidden {
+	display: none !important;
+	height: 0 !important;
+	width: 0 !important;
+	overflow: hidden !important;
+	visibility: hidden !important;
+}
+
+/* Placeholder element (removed after injection) */
+.cfwc-hp-init {
+	display: none !important;
+}
+
+/* Generic hidden element */
+.cfwc-hidden {
+	display: none !important;
+}
+
+/* Legacy container support */
+.cfwc-hp-container,
+.cfwc-hp-wrap,
+.cfwc-hp-extra {
 	position: absolute !important;
 	top: -9999px !important;
 	left: -9999px !important;
@@ -46,6 +87,7 @@
 	width: 0 !important;
 	overflow: hidden !important;
 }
+
 
 /* Error message styling */
 .cfwc-error {

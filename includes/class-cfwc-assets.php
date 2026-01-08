@@ -54,12 +54,10 @@ class Assets {
 	 * @return void
 	 */
 	public function register_scripts() {
-		$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
-
 		// Register frontend script.
 		wp_register_script(
 			'cfwc-frontend',
-			CFWC_PLUGIN_URL . 'assets/js/frontend' . $suffix . '.js',
+			CFWC_PLUGIN_URL . 'assets/js/frontend.js',
 			array(),
 			CFWC_VERSION,
 			true
@@ -68,7 +66,7 @@ class Assets {
 		// Register frontend styles.
 		wp_register_style(
 			'cfwc-frontend',
-			CFWC_PLUGIN_URL . 'assets/css/frontend' . $suffix . '.css',
+			CFWC_PLUGIN_URL . 'assets/css/frontend.css',
 			array(),
 			CFWC_VERSION
 		);
@@ -298,9 +296,10 @@ class Assets {
 	 */
 	private function get_localized_data() {
 		$settings = Plugin::instance()->settings();
+		$provider = $settings->get( 'provider' );
 
-		return array(
-			'provider'       => $settings->get( 'provider' ),
+		$data = array(
+			'provider'       => $provider,
 			'siteKey'        => $settings->get( 'site_key' ),
 			'theme'          => $settings->get( 'theme' ),
 			'size'           => $settings->get( 'size' ),
@@ -314,6 +313,14 @@ class Assets {
 				'failed'  => __( 'CAPTCHA verification failed. Please try again.', 'captcha-for-woocommerce' ),
 			),
 		);
+
+		// Add honeypot configuration if honeypot is enabled.
+		if ( 'honeypot' === $provider || 'yes' === $settings->get( 'enable_honeypot' ) ) {
+			$honeypot      = new Providers\Honeypot();
+			$data['honeypot'] = $honeypot->get_js_config();
+		}
+
+		return $data;
 	}
 
 	/**
@@ -359,38 +366,48 @@ class Assets {
 	/**
 	 * Enqueue admin assets.
 	 *
-	 * Loads admin-specific scripts and styles only on our settings page.
+	 * Loads admin-specific scripts and styles on relevant admin pages.
 	 *
 	 * @since 1.0.0
 	 * @param string $hook The current admin page hook.
 	 * @return void
 	 */
 	public function enqueue_admin_assets( $hook ) {
-		// Only load on WooCommerce settings page.
+		// Load admin CSS on dashboard (for widget) and settings page.
+		$load_css_on = array( 'index.php', 'woocommerce_page_wc-settings' );
+
+		if ( in_array( $hook, $load_css_on, true ) ) {
+			// For settings page, check we're on our tab.
+			if ( 'woocommerce_page_wc-settings' === $hook ) {
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				if ( ! isset( $_GET['tab'] ) || 'cfwc_captcha' !== $_GET['tab'] ) {
+					return;
+				}
+			}
+
+			// Admin styles.
+			wp_enqueue_style(
+				'cfwc-admin',
+				CFWC_PLUGIN_URL . 'assets/css/admin.css',
+				array(),
+				CFWC_VERSION
+			);
+		}
+
+		// Only load admin JS on settings page.
 		if ( 'woocommerce_page_wc-settings' !== $hook ) {
 			return;
 		}
 
-		// Check if we're on our settings tab.
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		if ( ! isset( $_GET['tab'] ) || 'cfwc_captcha' !== $_GET['tab'] ) {
 			return;
 		}
 
-		$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
-
-		// Admin styles.
-		wp_enqueue_style(
-			'cfwc-admin',
-			CFWC_PLUGIN_URL . 'assets/css/admin' . $suffix . '.css',
-			array(),
-			CFWC_VERSION
-		);
-
 		// Admin scripts.
 		wp_enqueue_script(
 			'cfwc-admin',
-			CFWC_PLUGIN_URL . 'assets/js/admin' . $suffix . '.js',
+			CFWC_PLUGIN_URL . 'assets/js/admin.js',
 			array( 'jquery' ),
 			CFWC_VERSION,
 			true

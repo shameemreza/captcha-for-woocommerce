@@ -1,0 +1,16 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.idea/
+.vscode/
+*.sublime-*
+
+# Development files
+node_modules/
+*.log
+*.map
+
+# Build artifacts
+*.zip

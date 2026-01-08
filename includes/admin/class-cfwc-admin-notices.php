@@ -163,27 +163,28 @@ class Admin_Notices {
 			return;
 		}
 
-		// Only output on relevant pages.
+		// Only enqueue on relevant pages.
 		if ( 'plugins' !== $screen->id && 0 !== strpos( $screen->id, 'woocommerce' ) ) {
 			return;
 		}
 
-		// Enqueue inline script properly.
-		$script = sprintf(
-			'(function($) {
-				$(".cfwc-welcome-notice, .cfwc-config-notice").on("click", ".notice-dismiss", function() {
-					var notice = $(this).closest(".notice").data("notice");
-					$.post(ajaxurl, {
-						action: "cfwc_dismiss_welcome_notice",
-						notice: notice,
-						nonce: "%s"
-					});
-				});
-			})(jQuery);',
-			wp_create_nonce( 'cfwc_dismiss_notice' )
+		// Enqueue the notice handler script.
+		wp_enqueue_script(
+			'cfwc-admin-notices',
+			CFWC_PLUGIN_URL . 'assets/js/admin-notices.js',
+			array( 'jquery' ),
+			CFWC_VERSION,
+			true
 		);
 
-		wp_add_inline_script( 'jquery', $script );
+		// Pass nonce to script.
+		wp_localize_script(
+			'cfwc-admin-notices',
+			'cfwcNotices',
+			array(
+				'nonce' => wp_create_nonce( 'cfwc_dismiss_notice' ),
+			)
+		);
 	}
 
 	/**

@@ -2,6 +2,7 @@
  * Captcha for WooCommerce - Frontend Script
  *
  * Lightweight handler for CAPTCHA widget initialization and form integration.
+ * Includes advanced honeypot with JS-injection technique.
  * Total size target: < 5KB minified + gzipped.
  *
  * @package Captcha_For_WooCommerce
@@ -25,6 +26,7 @@
 		 */
 		init: function() {
 			this.initProvider();
+			this.initHoneypot();
 			this.bindEvents();
 		},
 
@@ -59,6 +61,107 @@
 						self.initHcaptcha();
 					} );
 					break;
+
+				case 'honeypot':
+					// Honeypot is initialized separately via initHoneypot().
+					break;
+			}
+		},
+
+		/**
+		 * Initialize honeypot protection.
+		 *
+		 * Injects honeypot fields via JavaScript. Bots that don't execute JS
+		 * will never see these fields and fail server-side validation.
+		 */
+		initHoneypot: function() {
+			// Only initialize if honeypot is enabled.
+			if ( ! this.settings.honeypot ) {
+				return;
+			}
+
+			var self = this;
+			var hp = this.settings.honeypot;
+
+			// Form selectors to target.
+			var formSelectors = [
+				// WooCommerce forms.
+				'form.woocommerce-checkout',
+				'form.woocommerce-form-login',
+				'form.woocommerce-form-register',
+				'form.woocommerce-ResetPassword',
+				'form#order_review',
+				'form.woocommerce-EditAccountForm',
+				// WordPress forms.
+				'form#loginform',
+				'form#registerform',
+				'form#lostpasswordform',
+				'form#commentform',
+				'form.comment-form',
+				// Product Vendors.
+				'form#wcpv-vendor-registration',
+				// Generic class for custom integrations.
+				'form.cfwc-protected'
+			];
+
+			// Find all forms and inject honeypot.
+			var forms = document.querySelectorAll( formSelectors.join( ', ' ) );
+			forms.forEach( function( form ) {
+				self.injectHoneypotFields( form, hp );
+			} );
+
+			// Also look for placeholder elements.
+			var placeholders = document.querySelectorAll( '.cfwc-hp-init' );
+			placeholders.forEach( function( placeholder ) {
+				var form = placeholder.closest( 'form' );
+				if ( form && ! form.querySelector( '.cfwc-hp-injected' ) ) {
+					self.injectHoneypotFields( form, hp );
+				}
+			} );
+		},
+
+		/**
+		 * Inject honeypot fields into a form.
+		 *
+		 * @param {Element} form The form element.
+		 * @param {Object}  hp   Honeypot configuration.
+		 */
+		injectHoneypotFields: function( form, hp ) {
+			// Skip if already injected.
+			if ( form.querySelector( '.cfwc-hp-injected' ) ) {
+				return;
+			}
+
+			// Build the honeypot HTML.
+			// 1. Visible trap field (alt_s) - bots will fill this.
+			// 2. Hidden field with unique name - proves JS executed.
+			// 3. Hidden verification fields.
+			var honeypotHTML = '' +
+				'<div class="cfwc-hp-injected" aria-hidden="true">' +
+					// Visible trap (positioned off-screen via CSS).
+					'<div class="cfwc-hp-trap">' +
+						'<label for="cfwc_alt_s">Alternative:</label>' +
+						'<input type="text" id="cfwc_alt_s" name="alt_s" autocomplete="new-password" tabindex="-1">' +
+					'</div>' +
+					// Hidden honeypot with value (JS-only field).
+					'<span class="cfwc-hp-hidden">' +
+						'<input type="text" name="' + hp.fieldName + '" value="' + hp.timestamp + '" tabindex="-1">' +
+					'</span>' +
+				'</div>' +
+				// Verification fields (hidden inputs).
+				'<input type="hidden" name="cfwc_hp_nonce" value="' + hp.nonce + '">' +
+				'<input type="hidden" name="cfwc_hp_time" value="' + hp.timestamp + '">' +
+				'<input type="hidden" name="cfwc_hp_challenge" value="' + hp.challenge + '">' +
+				'<input type="hidden" name="cfwc_hp_js" value="">';
+
+			// Inject into form.
+			form.insertAdjacentHTML( 'beforeend', honeypotHTML );
+
+			// Calculate JS challenge response (proves real browser).
+			var jsField = form.querySelector( 'input[name="cfwc_hp_js"]' );
+			if ( jsField && hp.challengeA && hp.challengeB && hp.challengeC ) {
+				var result = ( hp.challengeA * hp.challengeB + hp.challengeC ).toString( 36 );
+				jsField.value = result;
 			}
 		},
 
@@ -316,14 +419,155 @@
 		bindEvents: function() {
 			var self = this;
 
-			// Re-initialize on AJAX content updates (WooCommerce).
+			// Re-initialize on AJAX content updates (WooCommerce Classic Checkout).
 			document.body.addEventListener( 'updated_checkout', function() {
 				self.initProvider();
+				self.initHoneypot();
 			} );
 
 			// Re-initialize when fragments are refreshed.
 			document.body.addEventListener( 'wc_fragments_refreshed', function() {
 				self.initProvider();
+				self.initHoneypot();
+			} );
+
+			// Reset on checkout error.
+			jQuery( document.body ).on( 'checkout_error', function() {
+				self.resetAllWidgets();
+			} );
+
+			// Initialize Block Checkout integration.
+			this.initBlockCheckout();
+		},
+
+		/**
+		 * Initialize WooCommerce Block Checkout integration.
+		 *
+		 * Uses wp.data to communicate with the Store API.
+		 * Token is sent via extensions data.
+		 */
+		initBlockCheckout: function() {
+			var self = this;
+
+			// Check if we're in Block Checkout context.
+			// The isBlockCheckout flag is set by the PHP Checkout_Integration class.
+			if ( ! this.settings.isBlockCheckout ) {
+				return;
+			}
+
+			// Check if wp.data is available (should be loaded as dependency).
+			if ( typeof wp === 'undefined' || ! wp.data ) {
+				console.warn( 'Captcha for WooCommerce: wp.data not available for Block Checkout.' );
+				return;
+			}
+
+			// Subscribe to WooCommerce store changes.
+			var unsubscribe = wp.data.subscribe( function() {
+				var container = document.getElementById( 'cfwc-block-checkout-captcha' );
+
+				// Skip if container not found or already initialized.
+				if ( ! container || container.getAttribute( 'data-cfwc-block-init' ) === '1' ) {
+					return;
+				}
+
+				// Skip if widget already rendered.
+				if ( container.innerHTML.trim() !== '' ) {
+					return;
+				}
+
+				container.setAttribute( 'data-cfwc-block-init', '1' );
+				self.renderBlockCheckoutWidget( container );
+
+				// Unsubscribe after initialization.
+				if ( typeof unsubscribe === 'function' ) {
+					unsubscribe();
+				}
+			} );
+		},
+
+		/**
+		 * Render CAPTCHA widget for Block Checkout.
+		 *
+		 * @param {Element} container The widget container.
+		 */
+		renderBlockCheckoutWidget: function( container ) {
+			var self = this;
+			var provider = this.settings.provider;
+			var siteKey = this.settings.siteKey;
+
+			// Callback to send token to Store API.
+			var onTokenReceived = function( token ) {
+				if ( typeof wp !== 'undefined' && wp.data ) {
+					wp.data.dispatch( 'wc/store/checkout' ).__internalSetExtensionData(
+						'captcha-for-woocommerce',
+						{ token: token }
+					);
+				}
+			};
+
+			switch ( provider ) {
+				case 'turnstile':
+					if ( window.turnstile ) {
+						window.turnstile.render( container, {
+							sitekey: siteKey,
+							theme: self.getTheme(),
+							callback: onTokenReceived
+						} );
+					}
+					break;
+
+				case 'recaptcha_v2':
+					if ( window.grecaptcha ) {
+						window.grecaptcha.render( container, {
+							sitekey: siteKey,
+							theme: self.getTheme() === 'auto' ? 'light' : self.getTheme(),
+							callback: onTokenReceived
+						} );
+					}
+					break;
+
+				case 'recaptcha_v3':
+					if ( window.grecaptcha ) {
+						window.grecaptcha.ready( function() {
+							window.grecaptcha.execute( siteKey, { action: 'checkout' } )
+								.then( onTokenReceived );
+						} );
+
+						// Refresh token periodically.
+						setInterval( function() {
+							window.grecaptcha.ready( function() {
+								window.grecaptcha.execute( siteKey, { action: 'checkout' } )
+									.then( onTokenReceived );
+							} );
+						}, 90000 );
+					}
+					break;
+
+				case 'hcaptcha':
+					if ( window.hcaptcha ) {
+						window.hcaptcha.render( container, {
+							sitekey: siteKey,
+							theme: self.getTheme() === 'auto' ? 'light' : self.getTheme(),
+							callback: onTokenReceived
+						} );
+					}
+					break;
+
+				case 'honeypot':
+					// Honeypot doesn't need client-side rendering for Block Checkout.
+					// It's handled server-side via Store API extension.
+					onTokenReceived( 'honeypot' );
+					break;
+			}
+		},
+
+		/**
+		 * Reset all widgets on the page.
+		 */
+		resetAllWidgets: function() {
+			var self = this;
+			Object.keys( this.widgets ).forEach( function( containerId ) {
+				self.reset( containerId );
 			} );
 		},
 
